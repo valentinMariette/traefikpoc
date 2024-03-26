@@ -1,0 +1,67 @@
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: echo
+  labels:
+    app: echo
+spec:
+  entryPoints:
+    - web
+    - websecure
+  tls:
+    secretName: echo.staging.armis.tech
+  routes:
+  - match: "Host(`echo.staging.armis.tech`)"
+    kind: Rule
+    services:
+      - name: armis-reference-api
+        namespace: engineering
+        port: 8080
+      # - name: echo
+      #   port: 8080
+    middlewares:
+      - name: keycloakopenid
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: echo
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: echo
+  template:
+    metadata:
+      labels:
+        app: echo
+    spec:
+      containers:
+        - image: mendhak/http-https-echo:latest
+          imagePullPolicy: IfNotPresent
+          name: echo
+          resources:
+            limits:
+              cpu: 1000m
+              memory: 1Gi
+            requests:
+              cpu: 500m
+              memory: 500Mi
+          ports:
+            - containerPort: 8080
+              name: proxy
+              protocol: TCP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: echo
+spec:
+  ports:
+    - port: 8080
+      targetPort: 8080
+      protocol: TCP
+  type: ClusterIP
+  selector:
+    app: echo

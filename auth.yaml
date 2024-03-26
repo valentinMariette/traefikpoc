@@ -1,0 +1,60 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: traefik-forward-auth
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: traefik-forward-auth
+  template:
+    metadata:
+      labels:
+        app: traefik-forward-auth
+    spec:
+      containers:
+        - image: thomseddon/traefik-forward-auth:latest
+          imagePullPolicy: IfNotPresent
+          name: traefik-forward-auth
+          resources:
+            limits:
+              cpu: 1000m
+              memory: 1Gi
+            requests:
+              cpu: 500m
+              memory: 500Mi
+          ports:
+            - containerPort: 4181
+              name: proxy
+              protocol: TCP
+          env:
+            - name: DEFAULT_PROVIDER
+              value: "oidc"
+            - name: PROVIDERS_OIDC_ISSUER_URL
+              value: "https://armis-identity.staging.armis.tech/realms/armis-clerks"
+            - name: PROVIDERS_OIDC_CLIENT_ID
+              value: "traefik-apigateway"
+            - name: PROVIDERS_OIDC_CLIENT_SECRET
+              value: "ZpH0qdW9vKJWXh2jR6dOeduLUS65RHQ9"
+            - name: SECRET
+              value: "FjCMBgnd63cdaj8PSE=90543db6-0af6-45e4-86eb-32c7223b13f8"
+            - name: INSECURE_COOKIE
+              value: "true"
+            - name: URL_PATH
+              value: "/_oauth"
+            - name: LOG_LEVEL
+              value: debug
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: traefik-forward-auth
+spec:
+  ports:
+    - port: 4181
+      targetPort: 4181
+      protocol: TCP
+  type: ClusterIP
+  selector:
+    app: traefik-forward-auth
