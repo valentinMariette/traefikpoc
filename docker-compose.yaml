@@ -1,0 +1,41 @@
+version: "3.9"
+services:
+  reverse-proxy:
+    image: traefik:v2.9 # <-- Please use the latest supported version
+    restart: always
+    command:
+      - "--api=true"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.http.address=:80"
+      - "--entrypoints.https.address=:443"
+    ports:
+      - "80:80"
+      - "443:443"
+      - "6969:8080"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+
+  mybackend:
+    image: traefik/whoami
+    labels:
+      - "traefik.enable=true"
+      # creates new middleware called redirect-to-https
+      - "traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https"
+      # creates new router called redirect-https
+      - "traefik.http.routers.redirect-https.rule=Host(`api.localhost`)"
+      - "traefik.http.routers.redirect-https.entryPoints=http"
+      # applies middleware to router
+      - "traefik.http.routers.redirect-https.middlewares=redirect-to-https"
+      # creates new router called api_tls
+      - "traefik.http.routers.api.entryPoints=https"
+      - "traefik.http.routers.api.rule=Host(`api.localhost`)"
+      - "traefik.http.routers.api.tls=true"
+      - "traefik.http.routers.api.middlewares=ratelimitme"
+      - "traefik.http.middlewares.ratelimitme.forwardauth.address=http://myauth:80"
+      - "traefik.http.middlewares.ratelimitme.forwardauth.trustforwardheader=true"
+      - "traefik.http.middlewares.ratelimitme.forwardauth.authresponseheaders=X-Forwarded-User"
+
+  myauth:
+    # The following image will print to stdout the received headers.
+    image: mendhak/http-https-echo
