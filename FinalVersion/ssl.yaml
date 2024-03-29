@@ -1,0 +1,43 @@
+---
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: letsencrypt
+spec:
+  acme:
+    # The ACME server URL
+    server: https://acme-v02.api.letsencrypt.org/directory
+    # Email address use.d for ACME registration
+    email: devops@armis.tech
+    # Name of a secret used to store the ACME account private key
+    privateKeySecretRef:
+      name: letsencrypt
+    # Enable the DNS-01 challenge provider
+    solvers:
+    - dns01:
+        cloudflare:
+          apiTokenSecretRef:
+            name: cloudflare-api-token-secret
+            key: api-token
+---
+apiVersion: traefik.io/v1alpha1
+kind: TLSOption
+metadata:
+  name: default
+spec:
+  minVersion: VersionTLS12
+---
+apiVersion: traefik.io/v1alpha1
+kind: TLSOption
+metadata:
+  name: mintls13
+spec:
+  minVersion: VersionTLS13
+---
+apiVersion: traefik.io/v1alpha1
+kind: TLSOption
+metadata:
+  name: default
+spec:
+  cipherSuites:
+    - TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256

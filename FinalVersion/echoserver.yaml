@@ -1,0 +1,24 @@
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: echo
+  labels:
+    app: echo
+spec:
+  entryPoints:
+    - web
+    - websecure
+  tls:
+    secretName: echo.staging.armis.tech
+  routes:
+  - match: "Host(`echo.staging.armis.tech`)"
+    kind: Rule
+    services:
+      - name: armis-reference-api
+        namespace: engineering
+        port: 8080
+    middlewares:
+      # - name: test-errors
+      - name: keycloakopenid
+---

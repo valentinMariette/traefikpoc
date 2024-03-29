@@ -1,0 +1,40 @@
+---
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: whitelist-vpn
+spec:
+  ipAllowList:
+    sourceRange:
+      - "34.147.184.220/32"
+---
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: test-errors
+spec:
+  errors:
+    status:
+      - "300-307"
+      - "403"
+      - "404"
+    query: /403.html
+    service:
+      name: error
+      port: 80
+---
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+    name: keycloakopenid
+spec:
+    plugin:
+        keycloakopenid:
+            ClientID: traefik-apigateway
+            ClientSecret: ZpH0qdW9vKJWXh2jR6dOeduLUS65RHQ9
+            KeycloakRealm: armis-clerks
+            KeycloakURL: armis-identity.staging.armis.tech
+            Scope: "openid"
+            TokenCookieName: AUTH_TOKEN
+            UseAuthHeader: "true"
+---

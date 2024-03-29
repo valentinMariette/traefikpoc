@@ -1,0 +1,41 @@
+additionalArguments: ["--log.level=DEBUG"]
+# Enable the auto-scaling with cpu usage metrics
+deployment:
+  replicas: null
+resources:
+  requests:
+    cpu: "100m"
+    memory: "50Mi"
+  limits:
+    cpu: "300m"
+    memory: "150Mi"
+autoscaling:
+  enabled: true
+  maxReplicas: 2
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 80
+logs:
+  general:
+    level: DEBUG
+providers:
+  kubernetesCRD:
+    allowCrossNamespace: true
+    enabled: true
+  # kubernetesIngress:
+  #   enabled: true
+  #   allowExternalNameServices: false
+  #   allowEmptyServices: false
+  #   namespaces: []
+metric:
+  datadog:
+    address: datadog-stg.default.svc.cluster.local:8125
+experimental:
+  plugins:
+    keycloakopenid:
+      moduleName: "github.com/Gwojda/keycloakopenid"
+      version: "v0.1.35"    
